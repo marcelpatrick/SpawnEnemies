@@ -2,11 +2,22 @@
 Spawning Enemies with different speeds
 
 # Parent Class
-- Create a c++ Character class
+
+## 1- Prepare the Character
+- Create a c++ Character class "Enemy"
+- Create a Blueprint our of this C++ class "BP_Enemy"
 - Add a mesh to it
-- #include "GameFramework/CharacterMovementComponent.h" in the header file
-- Define the character walking speed and direction
+- Set Simulate Physics as enabled
+- Set Collision to Physics Actor
+- Set Auto Possess AI to Placed in the World or Spawned
+
+## 2- Write Code
 - Header File
+  - #include "GameFramework/CharacterMovementComponent.h" in the header file
+  - Declare a SetSpeed() and a Move() function
+  - Declare a float for the speed of this child character and set its value
+  - Declare a float for VectorDirection - set it = 1 to walk forward or -1 for backward
+
 ```cpp
 public:
 	// Sets default values for this character's properties
@@ -47,5 +58,79 @@ void AEnemy::Move(float VectorDirection)
 	//Adds movement input to the character 
 		//AddMovementInput(direction to which apply movement, vector direction in float - if -1 goes back, if +1 goes forward)
 	AddMovementInput(GetActorForwardVector(), VectorDirection);
+}
+```
+
+# Child Classes
+
+## 1- Prepare Characters
+- Right click on Enemy C++ and select "Create C++ Class Derived from Enemy"
+- Create a Blueprint our of this class
+- Set Simulate Physics as enabled
+- Set Collision to Physics Actor
+- Set Auto Possess AI to Placed in the World or Spawned
+
+## 2- Write Code
+
+- Header file
+  - #include "GameFramework/CharacterMovementComponent.h" in the header file
+  - Declare a SetSpeed() and a Move() function
+  - Declare a float for the speed of this child character and set its value
+  - Declare a float for VectorDirection - don't need to initialize its values because it will inherit it form the parent class
+
+```cpp
+UCLASS()
+class MOVEITMOVEIT_API AEnemySlow : public AEnemy
+{
+	GENERATED_BODY()
+
+public:
+	AEnemySlow();
+
+	void Tick(float DeltaTime);
+	void SetSpeed(float SpeedSlow) override;
+	void Move(float VectorDirection);
+	
+protected:
+	void BeginPlay();
+
+private:
+	float SpeedSlow = 30.0f;
+	float VectorDirection; 
+};
+```
+
+- Implementation file
+  - Define Move(), SetSpeed() and BeginPlay() by inheriting it from the parent class
+  - Call SetSpeed() from the constructor and Move() from tick
+
+```cpp
+AEnemySlow::AEnemySlow()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+    SetSpeed(SpeedSlow); 
+}
+
+void AEnemySlow::Tick(float DeltaTime)
+{
+    AEnemy::Tick(DeltaTime); 
+
+    Move(VectorDirection);
+}
+
+void AEnemySlow::BeginPlay()
+{
+    AEnemy::BeginPlay();
+}
+
+void AEnemySlow::SetSpeed(float SpeedSlow)
+{
+    AEnemy::SetSpeed(SpeedSlow);
+}
+
+void AEnemySlow::Move(float VectorDirection)
+{
+    AEnemy::Move(VectorDirection);
 }
 ```
