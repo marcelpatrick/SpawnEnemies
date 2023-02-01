@@ -151,3 +151,10 @@ void AEnemySlow::Move(float VectorDirection)
 ```cpp
 
 ```
+
+# Randomize
+- Randomize the spawned actor
+
+
+# Timer
+
