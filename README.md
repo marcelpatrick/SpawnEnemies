@@ -134,3 +134,20 @@ void AEnemySlow::Move(float VectorDirection)
     AEnemy::Move(VectorDirection);
 }
 ```
+
+# Spawner:
+
+## 1- Prepare component
+- Add a new Actor C++ class Spawner
+- Create a Blueprint based on this class BP_Spawner
+- Place this Blueprint in the world
+
+## 2- Write Code
+
+- Header File
+  - #include "EnemySlow.h"
+  - Declare a class object of the type of the character you want to spawn
+
+```cpp
+
+```
