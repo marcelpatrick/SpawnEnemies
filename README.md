@@ -146,15 +146,51 @@ void AEnemySlow::Move(float VectorDirection)
 
 - Header File
   - #include "EnemySlow.h"
-  - Declare a class object of the type of the character you want to spawn
+  - Declare a SpawnActor() function
+  - Declare a class object of the type of the character you want to spawn and expose it to the blueprint with UPROPERTY
+  - Declare Location and Rotation variables
+  - Declare a FTimerHandle variable
 
 ```cpp
+public:	
+	// Sets default values for this actor's properties
+	AMySpawner();
+	void SpawnActor();
+	
+private:
 
+	UPROPERTY(EditAnywhere, Category = "Enemy")
+	TSubclassOf<AEnemySlow> EnemySlow; 
+	FVector Location;
+	FRotator Rotation;
+	FTimerHandle MyTimerHandle; 
+```
+  - Implementation file
+    - Get actor location and rotation
+    - Define 
+    - Set timer to call SpawnActor()
+    - Define SpawnActor() to Spawn our EnemySlow at the location where the spawner object was placed in the world
+
+```cpp
+void AMySpawner::BeginPlay()
+{
+	Super::BeginPlay();
+
+	Location = GetActorLocation();
+	Rotation = GetActorRotation();
+
+	GetWorldTimerManager().SetTimer(MyTimerHandle, this, &AMySpawner::SpawnActor, 5.0f, true);
+	
+}
+
+void AMySpawner::SpawnActor()
+{
+	GetWorld()->SpawnActor<AEnemySlow>(EnemySlow, Location, Rotation); 
+}
 ```
 
 # Randomize
 - Randomize the spawned actor
 
 
-# Timer
 
