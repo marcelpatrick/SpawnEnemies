@@ -88,7 +88,9 @@ public:
 	AEnemySlow();
 
 	void Tick(float DeltaTime);
+	//Override parent SetSpeed() by passing a speed variable that specific to the child class
 	void SetSpeed(float SpeedSlow) override;
+	//Inherit exactly the same Move() from the parent class using the same VectorDirection variable
 	void Move(float VectorDirection);
 	
 protected:
