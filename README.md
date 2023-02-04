@@ -66,9 +66,9 @@ void AEnemy::Move(float VectorDirection)
 ## 1- Prepare Characters
 - Right click on Enemy C++ and select "Create C++ Class Derived from Enemy"
 - Create a Blueprint our of this class
-- Set Simulate Physics as enabled
+- Set Simulate Physics as disabled
 - Set Collision to Physics Actor
-- Set Auto Possess AI to Placed in the World or Spawned
+- In the root component, Set Auto Possess AI to Placed in the World or Spawned
 
 ## 2- Write Code
 
