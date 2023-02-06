@@ -15,31 +15,30 @@ Spawning Enemies with different speeds
 - Header File
   - #include "GameFramework/CharacterMovementComponent.h" in the header file
   - Declare a SetSpeed() and a Move() function
-  - Declare a float for the speed of this child character and set its value
+  - Declare a Print() function the print a message specific to each actor and set is as virtual for it to be overriden by the child classes
+  - Declare a float for the speed
   - Declare a float for VectorDirection - set it = 1 to walk forward or -1 for backward
 
 ```cpp
 public:
 	// Sets default values for this character's properties
 	AEnemy();
-	virtual void SetSpeed(float Speed);
-	virtual void Move(float VectorDirection);
+	void SetSpeed(float Speed);
+	void Move(float VectorDirection);
+	//Include "virtual" because this function will get overriden by the child classes
+	virtual void Print();
 	
 private:
 	float Speed = 100.0f;
 	float VectorDirection = 1.0f;
 ```
 - Implementation file
+  - Define SetSpeed() to set the actor's maximum walking speed
+  - Define Move() to add fowards movement to the actor
+  - Define Print() to print a message
+  - Call Move() from Tick() and Print() from BeginPlay() 
+  - SetSpeed() will be called from the child classes each one passing its own Speed variable
 ```cpp
-AEnemy::AEnemy()
-{
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	SetSpeed(Speed);
-}
-
-// Called every frame
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -59,13 +58,18 @@ void AEnemy::Move(float VectorDirection)
 		//AddMovementInput(direction to which apply movement, vector direction in float - if -1 goes back, if +1 goes forward)
 	AddMovementInput(GetActorForwardVector(), VectorDirection);
 }
+
+void AEnemy::Print()
+{
+	UE_LOG(LogTemp, Warning, TEXT("I am an Actor")); 
+}
 ```
 
 # Child Classes
 
 ## 1- Prepare Characters
 - Right click on Enemy C++ and select "Create C++ Class Derived from Enemy"
-- Create a Blueprint our of this class
+- Create a Blueprint out of this class
 - Set Simulate Physics as disabled
 - Set Collision to Physics Actor
 - In the root component, Set Auto Possess AI to Placed in the World or Spawned
@@ -73,69 +77,38 @@ void AEnemy::Move(float VectorDirection)
 ## 2- Write Code
 
 - Header file
-  - #include "GameFramework/CharacterMovementComponent.h" in the header file
-  - Declare a SetSpeed() and a Move() function
+  - Declare a Print() function and mark it as "override" so that it can replace the correspondent funciton in the parent class
   - Declare a float for the speed of this child character and set its value
-  - Declare a float for VectorDirection - don't need to initialize its values because it will inherit it form the parent class
 
 ```cpp
-UCLASS()
-class MOVEITMOVEIT_API AEnemySlow : public AEnemy
-{
-	GENERATED_BODY()
-
 public:
-	AEnemySlow();
-
-	void Tick(float DeltaTime);
-	//Override parent SetSpeed() by passing a speed variable that specific to the child class
-	void SetSpeed(float SpeedSlow) override;
-	//Inherit exactly the same Move() from the parent class using the same VectorDirection variable
-	void Move(float VectorDirection);
+	AEnemyFast();
+	//Include "override" because this function will replace the correspondent parent function
+	void Print() override;
 	
-protected:
-	void BeginPlay();
 
 private:
-	float SpeedSlow = 30.0f;
-	float VectorDirection; 
-};
+	float SpeedFast = 500.0f;
 ```
 
 - Implementation file
-  - Define Move(), SetSpeed() and BeginPlay() by inheriting it from the parent class
-  - Call SetSpeed() from the constructor and Move() from tick
+  - Define Print() and set a specific message for this child actor
+  - Call SetSpeed() from the constructor and pass the Speed variable for this class - it will call the inherited SetSpeed() function from the parent class, but passing a different value. 
 
 ```cpp
-AEnemySlow::AEnemySlow()
+AEnemyFast::AEnemyFast()
 {
-    PrimaryActorTick.bCanEverTick = true;
-
-    SetSpeed(SpeedSlow); 
+    //Using the same inherited function from the parent class, just passing another variable - don't need to override
+    SetSpeed(SpeedFast); 
 }
 
-void AEnemySlow::Tick(float DeltaTime)
+void AEnemyFast::Print()
 {
-    AEnemy::Tick(DeltaTime); 
-
-    Move(VectorDirection);
-}
-
-void AEnemySlow::BeginPlay()
-{
-    AEnemy::BeginPlay();
-}
-
-void AEnemySlow::SetSpeed(float SpeedSlow)
-{
-    AEnemy::SetSpeed(SpeedSlow);
-}
-
-void AEnemySlow::Move(float VectorDirection)
-{
-    AEnemy::Move(VectorDirection);
+    UE_LOG(LogTemp, Warning, TEXT("I am a Fast Enemy!!!"));
 }
 ```
+- Repeate the same process for other actors, for each one passing a different Speed variable and printing a different message. 
+- In this example I will create another 2 actors: EnemyMedium and EnemySlow
 
 # Spawner:
 
@@ -147,9 +120,9 @@ void AEnemySlow::Move(float VectorDirection)
 ## 2- Write Code
 
 - Header File
-  - #include "EnemySlow.h"
+  - #include the reference for the parent and child actor classes, the World library and TimerManager library
   - Declare a SpawnActor() function
-  - Declare a class object of the type of the character you want to spawn and expose it to the blueprint with UPROPERTY
+  - Declare a class object of the type of the characters for the parent actor class and the other actors you want to spawn and expose them to the blueprint with UPROPERTY
   - Declare Location and Rotation variables
   - Declare a FTimerHandle variable
 
@@ -158,20 +131,28 @@ public:
 	// Sets default values for this actor's properties
 	AMySpawner();
 	void SpawnActor();
-	
-private:
 
-	UPROPERTY(EditAnywhere, Category = "Enemy")
+private:
+	TSubclassOf<AEnemy> Enemy; 
+
+	UPROPERTY(EditAnywhere, Category = "Enemy Slow")
 	TSubclassOf<AEnemySlow> EnemySlow; 
+
+	UPROPERTY(EditAnywhere, Category = "Enemy Medium")
+	TSubclassOf<AMyEnemyMedium> EnemyMedium; 
+
+	UPROPERTY(EditAnywhere, Category = "Enemy Fast")
+	TSubclassOf<AEnemyFast> EnemyFast; 
+
 	FVector Location;
 	FRotator Rotation;
+
 	FTimerHandle MyTimerHandle; 
 ```
   - Implementation file
-    - Get actor location and rotation
-    - Define 
-    - Set timer to call SpawnActor()
-    - Define SpawnActor() to Spawn our EnemySlow at the location where the spawner object was placed in the world
+    - Define SpawnActor() to Spawn our Enemies at the location where the spawner object was placed in the world
+      - Define a random variable and use a switch function to call a different actor depending on the variable 
+    - On BeginPlay() Get actor location and rotation and Set timer to call SpawnActor()
 
 ```cpp
 void AMySpawner::BeginPlay()
@@ -181,18 +162,38 @@ void AMySpawner::BeginPlay()
 	Location = GetActorLocation();
 	Rotation = GetActorRotation();
 
-	GetWorldTimerManager().SetTimer(MyTimerHandle, this, &AMySpawner::SpawnActor, 5.0f, true);
+	GetWorldTimerManager().SetTimer(MyTimerHandle, this, &AMySpawner::SpawnActor, 3.0f, true);
 	
 }
 
+// Called every frame
 void AMySpawner::SpawnActor()
 {
-	GetWorld()->SpawnActor<AEnemySlow>(EnemySlow, Location, Rotation); 
+	int MyRandom = FMath::RandRange(1,3); 
+
+	switch (MyRandom)
+	{
+	case 1:
+		Enemy = EnemySlow; 
+		break;
+
+	case 2:
+		Enemy = EnemyMedium;
+		break;
+
+	case 3:
+		Enemy = EnemyFast;
+		break;
+
+	default:
+		break;
+	}
+
+	GetWorld()->SpawnActor<AEnemy>(Enemy, Location, Rotation);
 }
 ```
 
-# Randomize
-- Randomize the spawned actor
-
+  - Inside Unreal, open the Spawner blueprint and select the actor blueprint for each Enemy object exposed with UPROPERTY
+  - Compile and save
 
 
